@@ -103,6 +103,19 @@
   .explain-section + .explain-section { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e2e8f0; }
   .explain-title { font-size: 14px; font-weight: 600; color: #1a5fb4; margin-bottom: 6px; }
   .explain-text { font-size: 15px; line-height: 1.7; color: #333; white-space: pre-wrap; word-break: break-word; }
+  .explain-hint { font-size: 13px; color: #8a94a6; margin-top: 10px; }
+
+  /* 查看法条（解析区不再显示法条，改由按钮查看，与网页版/服务端版一致） */
+  .btn-lawtip {
+    flex: 0 0 auto; min-height: 44px; padding: 0 16px; font-size: 14px; font-family: inherit;
+    border: 1px solid #cfd8e3; border-radius: 8px; background: #f4f6f9; color: #33415c; cursor: pointer;
+  }
+  .btn-lawtip:hover { border-color: #1a5fb4; color: #1a5fb4; }
+  .lawtip { margin-top: 10px; border: 1px solid #e5eaf0; border-radius: 8px; background: #fbfcfe; padding: 12px 14px; }
+  .lawtip-title { font-size: 14px; font-weight: 600; color: #1a5fb4; margin-bottom: 6px; }
+  .lawtip-text { font-size: 15px; line-height: 1.75; color: #333; white-space: pre-wrap; word-break: break-word; max-height: 45vh; overflow-y: auto; }
+
+  /* 错题本 */
 
   /* 错题本 */
   .wrong-row { border: 1px solid #e5eaf0; border-radius: 8px; padding: 12px 14px; margin: 10px 0; background: #fcfdff; }
@@ -174,16 +187,21 @@
       <span class="mode-label">背题模式：直接显示答案与解析，不判题</span>
       <button class="switch" id="backModeBtn" onclick="toggleBackMode()">关</button>
     </div>
+    <div class="mode-row">
+      <span class="mode-label">本题依据的法条</span>
+      <button class="btn-lawtip" id="lawTipBtn" onclick="toggleLawTip()">查看法条</button>
+    </div>
+    <div class="lawtip hidden" id="lawTipBox">
+      <div class="lawtip-title" id="lawTipTitle"></div>
+      <div class="lawtip-text" id="lawTipText"></div>
+    </div>
     <div id="options"></div>
     <div class="result hidden" id="resultBox"></div>
     <div class="explain hidden" id="explainBox">
       <div class="explain-section">
         <div class="explain-title">解析</div>
         <div class="explain-text" id="explainText"></div>
-      </div>
-      <div class="explain-section">
-        <div class="explain-title" id="lawTitle">法条依据</div>
-        <div class="explain-text" id="lawText"></div>
+        <div class="explain-hint" id="explainHint"></div>
       </div>
     </div>
     <div class="btn-row">
@@ -724,16 +742,36 @@ function showToast(text) {
 function hideExplanation() {
   $("explainBox").classList.add("hidden");
   $("explainText").textContent = "";
-  $("lawText").textContent = "";
+  if ($("explainHint")) $("explainHint").textContent = "";
+  /* 切题时同时收起「查看法条」面板 */
+  if ($("lawTipBox")) $("lawTipBox").classList.add("hidden");
 }
 
-/** 展示解析与法条依据（一律用 textContent，纯文本渲染，避免注入风险） */
+/** 展示解析：解析区只放解析文字，法条依据改由「查看法条」按钮查看（一律 textContent 渲染） */
 function showExplanation(q) {
-  const law = q.law || {};
   $("explainText").textContent = (q.explanation && q.explanation.trim()) ? q.explanation : "本题暂无解析。";
-  $("lawTitle").textContent = (law.title && law.title.trim()) ? law.title : "法条依据";
-  $("lawText").textContent = (law.text && law.text.trim()) ? law.text : "本题暂无收录对应法条。";
+  if ($("explainHint")) $("explainHint").textContent = "本题依据的法条可点上方「查看法条」查看。";
   $("explainBox").classList.remove("hidden");
+}
+
+/** 查看法条：展示当前题依据的法条原文（纯文本渲染），再次点击收起 */
+function toggleLawTip() {
+  const box = $("lawTipBox");
+  if (!box) return;
+  if (!box.classList.contains("hidden")) {
+    box.classList.add("hidden");
+    return;
+  }
+  const q = QUESTION_BANK[order[cursor]];
+  const law = (q && q.law) || {};
+  const text = (law.text || "").trim();
+  if (!text) {
+    showToast("本题暂无收录对应法条");
+    return;
+  }
+  $("lawTipTitle").textContent = law.title || "本题依据的法条";
+  $("lawTipText").textContent = text;
+  box.classList.remove("hidden");
 }
 
 /** 背题模式：直接标出正确答案并展示解析，不作判分 */
