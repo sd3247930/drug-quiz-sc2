@@ -11,7 +11,7 @@
  *   4. 版本号变化时自动清理旧缓存。
  */
 
-const CACHE_NAME = "drug-quiz-v2.0.0";
+const CACHE_NAME = "drug-quiz-v2.1.0";
 const APP_SHELL = [
   "./",
   "./index.html",
