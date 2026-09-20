@@ -226,7 +226,8 @@
   .app-bar-logo {
     flex: 0 0 auto; display: grid; place-items: center;
     width: 36px; height: 36px; border-radius: var(--radius-sm);
-    background: #fff; overflow: hidden;
+    /* 透明底 + 16% 白描边（同「生产二部」胶囊），四个页面共用这一条 */
+    background: transparent; border: 2px solid rgba(255, 255, 255, 0.16); overflow: hidden;
   }
   .app-bar-logo img { width: 30px; height: auto; display: block; }
   .app-bar-text { display: flex; flex-direction: column; min-width: 0; }
