@@ -136,7 +136,8 @@
 
   /* 轻提示（例如"请先选择答案"） */
   .toast {
-    position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%);
+    /* 提示条要落在 60px 底部导航栏上方，否则会挡住 tab 图标 */
+    position: fixed; left: 50%; bottom: calc(var(--tabbar-h, 60px) + 16px); transform: translateX(-50%);
     background: rgba(30, 35, 45, 0.92); color: #fff; padding: 10px 18px;
     border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .25s;
     pointer-events: none; z-index: 99; max-width: 90vw; text-align: center;
@@ -151,6 +152,242 @@
     .question { font-size: 16px; }
     .stat-value { font-size: 18px; }
   }
+
+/* ============================================================
+   设计 token 层 + 设计稿布局（待办 P1=A）
+   目的：静态单文件版与服务端版 / 安卓版视觉统一
+   做法：在文件末尾追加覆盖规则，既有规则保持不变，降低回归风险
+   说明：单文件版不额外引入字体文件（双击即用、发布目录只有 index.html + PWA 资源），
+        字体走系统栈兜底
+   ============================================================ */
+  :root {
+    /* 画布与卡片 */
+    --bg: #f8fafc;                 /* Slate 50 画布 */
+    --surface: #ffffff;
+    --surface-soft: #f1f5f9;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    /* 文字 */
+    --text: #0f172a;
+    --text-2: #475569;
+    --text-3: #64748b;
+    /* 品牌主色（深青） */
+    --primary: #0f5b78;
+    --primary-strong: #0b4459;
+    --primary-soft: #e0f2fe;
+    /* 状态色 */
+    --success: #10b981;
+    --success-soft: #f0fdf4;
+    --danger: #ef4444;
+    --danger-soft: #fef2f2;
+    /* 圆角 */
+    --radius-pill: 4px;
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-lg: 12px;
+    /* 阴影 */
+    --shadow-sm: 0 2px 4px 0 rgba(15, 23, 42, 0.04);
+    --shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    /* 间距与固定栏高度 */
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+    --gutter: 16px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --tabbar-h: 60px;
+    --scroll-offset: 72px;
+  }
+
+  body {
+    background-color: var(--bg);
+    background-image: radial-gradient(circle at 50% 0%, rgba(15, 91, 120, 0.05), transparent 38%);
+    background-repeat: no-repeat;
+    color: var(--text);
+    font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont,
+                 "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* 主卡片：顶栏与底栏通长，内容区自己留白 */
+  .app {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+  .app-main { padding: var(--gutter); padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--scroll-offset)); }
+
+  /* 顶部品牌栏（设计稿：56px 深青底 + logo + 标题 + 部门 chip） */
+  .app-bar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: var(--space-3);
+    min-height: 56px; padding: 8px var(--gutter);
+    background: var(--primary); color: #fff;
+  }
+  .app-bar-logo {
+    flex: 0 0 auto; display: grid; place-items: center;
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    background: #fff; overflow: hidden;
+  }
+  .app-bar-logo img { width: 30px; height: auto; display: block; }
+  .app-bar-text { display: flex; flex-direction: column; min-width: 0; }
+  .app-bar-title {
+    font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+    font-size: 17px; font-weight: 700; line-height: 1.25;
+    color: #fff; margin: 0; text-align: left;
+  }
+  .app-bar-sub { font-size: 12px; line-height: 1.3; color: rgba(255, 255, 255, 0.82); }
+  .app-bar-chip {
+    margin-left: auto; flex: 0 0 auto;
+    font-size: 12px; font-weight: 600; padding: 4px 10px;
+    border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.16); color: #fff;
+  }
+
+  /* 底部导航：4 个 tab（设计稿 60px 固定底栏） */
+  .tabbar {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; z-index: 50;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    width: 100%; max-width: 820px;
+    height: calc(var(--tabbar-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.05);
+  }
+  .tabbar .tab {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; min-height: 48px; text-decoration: none;
+    font-size: 11px; font-weight: 600; color: var(--text-3);
+  }
+  .tabbar .tab svg {
+    width: 22px; height: 22px;
+    fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .tabbar .tab.active { color: var(--primary); }
+  .tabbar .tab.active svg { stroke-width: 2.2; }
+
+  /* 文字、卡片、按钮统一走 token */
+  .progress, .summary { color: var(--text-2); }
+  .subtitle { color: var(--text-3); }
+  .hint, .footer, .mode-label, .q-no { color: var(--text-3); }
+  .stat-item { background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .stat-label { color: var(--text-3); }
+  .stat-value { color: var(--primary); }
+  .stat-section { color: var(--text); margin: 20px 0 10px; }
+  .question {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    padding: var(--space-3) var(--space-4);
+    color: var(--text);
+  }
+  .option {
+    border-radius: var(--radius); border-color: var(--border);
+    background: var(--surface); box-shadow: var(--shadow-sm);
+    transition: border-color .15s, background .15s, transform .12s, box-shadow .15s;
+  }
+  .option.selected { border-color: var(--primary); background: var(--primary-soft); }
+  .option.correct { border-color: var(--success); background: var(--success-soft); }
+  .option.wrong { border-color: var(--danger); background: var(--danger-soft); }
+  .menu-btn { border-radius: var(--radius); background: var(--primary); }
+  .menu-btn:hover { background: var(--primary-strong); }
+  /* 次级按钮色与服务端版保持一致（该色未进 token，按现有值对齐） */
+  .menu-btn.gray { background: #5c6672; }
+  .menu-btn.gray:hover { background: #4a535e; }
+  .menu-btn.red { background: var(--danger); }
+  .btn-primary { background: var(--primary); }
+  .btn-primary:hover { background: var(--primary-strong); }
+  .btn-secondary { background: var(--surface-soft); color: var(--text-2); border: 1px solid var(--border); }
+  .switch, .btn-lawtip { border-radius: var(--radius); border-color: var(--border); background: var(--surface-soft); color: var(--text-2); }
+  .switch.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .result.ok { background: var(--success-soft); color: var(--success); }
+  .result.bad { background: var(--danger-soft); color: var(--danger); }
+  .type-tag { background: var(--primary-soft); color: var(--primary); }
+  .explain, .wrong-row, .lawtip { background: var(--surface-soft); border-color: var(--border); }
+  .explain-title, .wrong-title, .lawtip-title { color: var(--primary); }
+
+  /* ============================================================
+     答题卡题号矩阵（M1=A 嵌入查看统计视图 / M2=A 5 列）
+     规格与服务端版 static/style.css 完全一致：5 列、8px 间隙、
+     44px 触摸高度、6px 圆角矩形；状态色走同一套 token
+     ============================================================ */
+  .matrix-legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin: 2px 0 10px; font-size: 12px; color: var(--text-3);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 3px;
+    border: 1px solid var(--border); background: var(--surface-soft);
+  }
+  .legend-dot.dot-correct { background: var(--success); border-color: var(--success); }
+  .legend-dot.dot-wrong { background: var(--danger); border-color: var(--danger); }
+  .legend-dot.dot-collected { background: var(--warning); border-color: var(--warning); }
+
+  .answer-matrix {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin: 4px 0 2px;
+  }
+  .matrix-cell {
+    position: relative;
+    min-height: 44px;
+    padding: 0 2px;
+    font-family: inherit;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+    color: var(--text-2);
+    cursor: pointer;
+  }
+  .matrix-cell:hover { border-color: var(--border-strong); }
+  .matrix-cell.correct { background: var(--success); border-color: var(--success); color: #fff; }
+  .matrix-cell.wrong { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .matrix-star {
+    position: absolute; top: 0; right: 3px;
+    font-size: 10px; line-height: 1.4; color: var(--warning);
+  }
+  .matrix-cell.correct .matrix-star,
+  .matrix-cell.wrong .matrix-star { color: #fff; }
+
+  /* 大屏：题号变小后一屏能看更多，列数自适应（移动端仍为 5 列） */
+  @media (min-width: 600px) {
+    .answer-matrix { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); }
+  }
+
+  /* ============================================================
+     我的笔记（E4）：写在解析下方，失焦 / 停止输入后自动保存
+     ============================================================ */
+  .note-box {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    background: var(--surface-soft);
+    padding: 12px 14px;
+  }
+  .note-title { font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+  .note-input {
+    width: 100%;
+    min-height: 72px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+  }
+  .note-input:focus { outline: none; border-color: var(--primary); }
+  .note-input::placeholder { color: var(--text-3); }
+
 </style>
 </head>
 <body>
@@ -160,19 +397,57 @@
      同一时刻只显示其中一个，用 .hidden 控制
      ============================================================ -->
 <div class="app">
-  <h1>药品管理相关法规知识竞赛试题库（生产二部专用）</h1>
-  <div class="subtitle">生产二部 · 法规知识竞赛刷题</div>
+  <!-- 顶部品牌栏（设计稿：深青底、白字、含部门标识） -->
+  <header class="app-bar">
+    <span class="app-bar-logo">
+      <img src="icons/icon-192.png" alt="">
+    </span>
+    <span class="app-bar-text">
+      <h1 class="app-bar-title">药品法规刷题</h1>
+      <span class="app-bar-sub">生产二部 · 法规知识竞赛</span>
+    </span>
+    <span class="app-bar-chip">生产二部</span>
+  </header>
+
+  <main class="app-main">
 
   <!-- 主菜单 -->
   <div id="menu">
     <div class="progress" id="menuProgress"></div>
     <div class="summary" id="menuSummary"></div>
+
+    <!-- 统计概览：与服务端版首页同结构、同 id（决策 S2=A） -->
+    <div class="stat-grid">
+      <div class="stat-item"><div class="stat-label">题库总题数</div><div class="stat-value" id="statTotal">0</div></div>
+      <div class="stat-item"><div class="stat-label">已答题数</div><div class="stat-value" id="statAnswered">0</div></div>
+      <div class="stat-item"><div class="stat-label">最近一次正确率</div><div class="stat-value" id="statAccuracy">—</div></div>
+      <div class="stat-item"><div class="stat-label">错题数</div><div class="stat-value" id="statWrong">0</div></div>
+      <div class="stat-item"><div class="stat-label">累计作答次数</div><div class="stat-value" id="statAttempts">0</div></div>
+      <div class="stat-item"><div class="stat-label">尚未作答</div><div class="stat-value" id="statUnanswered">0</div></div>
+    </div>
+
+    <div class="stat-section">练习入口</div>
     <button class="menu-btn" id="btnFull" onclick="startFullQuiz()">顺序做全部题目</button>
     <button class="menu-btn" onclick="startRandomQuiz()">随机练习（打乱题目顺序）</button>
     <button class="menu-btn" onclick="startWrongQuiz()">错题练习（只做错题）</button>
     <button class="menu-btn gray" onclick="showWrongBook()">查看错题本</button>
     <button class="menu-btn gray" onclick="showStats()">查看统计</button>
+
+    <div class="stat-section">记录管理</div>
+    <button class="menu-btn gray" id="exportProgressBtn" onclick="exportProgressClick()">导出进度</button>
+    <button class="menu-btn gray" id="importProgressBtn" onclick="importProgressClick()">导入进度</button>
     <button class="menu-btn red" onclick="resetAll()">清空所有记录（重新开始）</button>
+    <input type="file" id="importProgressFile" accept="application/json,.json" class="hidden">
+    <div class="hint" id="progressIOStatus"></div>
+
+    <!-- 旧进度导入：静态单文件版自身就是旧版，没有可导入的旧进度。
+         按 S2=A「保留为隐藏或禁用」——保留 DOM，默认隐藏，不删除入口。 -->
+    <div class="hidden" id="legacyImport">
+      <div class="stat-section">从旧版（单文件版）导入进度</div>
+      <p class="hint">静态单文件版自身就是旧版，没有可导入的旧进度；该入口仅服务端版使用。</p>
+      <button class="menu-btn gray" id="importOldBtn" type="button" disabled>导入旧版进度</button>
+      <div class="hint" id="importOldResult"></div>
+    </div>
   </div>
 
   <!-- 答题页 -->
@@ -204,6 +479,13 @@
         <div class="explain-hint" id="explainHint"></div>
       </div>
     </div>
+    <!-- 我的笔记（E4）：写在解析下方，输入后自动保存，只存在本机 -->
+    <div class="note-box">
+      <div class="note-title">我的笔记</div>
+      <textarea class="note-input" id="noteText" rows="3"
+        placeholder="在这里写你自己的备注（例如错因、易混点）；离开输入框会自动保存，只存在本机。"></textarea>
+      <div class="hint" id="noteStatus"></div>
+    </div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="backToMenu()">返回菜单</button>
       <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">提交答案</button>
@@ -234,6 +516,27 @@
     练习进度、错题本、统计只保存在这台设备的浏览器里，不上传任何服务器。<br>
     换手机或清除浏览器数据后，记录会丢失。
   </div>
+  </main>
+
+  <!-- 底部导航（设计稿：4 个 tab，图标 + 文字） -->
+  <nav class="tabbar">
+    <a href="#" class="tab active" data-view="menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 10v11h6v-6h6v6h6V10z"/></svg>
+      <span>首页</span>
+    </a>
+    <a href="#" class="tab" data-view="quiz">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l5 5v13H6zM14 3v6h6"/></svg>
+      <span>练习</span>
+    </a>
+    <a href="#" class="tab" data-view="wrongBook">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>
+      <span>错题本</span>
+    </a>
+    <a href="#" class="tab" data-view="stats">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>统计</span>
+    </a>
+  </nav>
 </div>
 
 <!-- 轻提示条 -->
@@ -560,6 +863,7 @@ const BANK_SIZE = QUESTION_BANK.length;
 const KEY_DATA = "drug_quiz_data";         /* 顺序练习进度 + 每题作答记录 */
 const KEY_WRONG = "drug_quiz_wrong";       /* 错题本 + 每题答错次数 */
 const KEY_SETTINGS = "drug_quiz_settings"; /* 用户设置（练习模式等） */
+const KEY_NOTES = "drug_quiz_notes";       /* 我的笔记（E4）：每题一段文字，独立存放 */
 
 /* 探测 localStorage 是否可用（隐私模式等场景可能被禁用） */
 let storageAvailable = true;
@@ -671,9 +975,27 @@ function normalizeWrong(raw) {
   return out;
 }
 
+/**
+ * 校正笔记结构（E4）
+ * 笔记独立存放在 KEY_NOTES，不混进作答记录——否则「只写了笔记没作答」会被统计成已答题。
+ * 结构：{ 题目索引: "笔记文字" }
+ */
+function normalizeNotes(raw) {
+  const out = {};
+  if (!raw || typeof raw !== "object") return out;
+  Object.keys(raw).forEach(function (key) {
+    const id = Number(key);
+    const text = raw[key];
+    if (!isFinite(id) || id < 0 || id >= BANK_SIZE) return;
+    if (typeof text === "string" && text.trim()) out[id] = text.slice(0, 2000);
+  });
+  return out;
+}
+
 /* 全局数据（页面加载时从本地读取，失败即用默认值） */
 let appData = normalizeData(loadJSON(KEY_DATA, defaultData()));
 let wrongData = normalizeWrong(loadJSON(KEY_WRONG, defaultWrong()));
+let notesData = normalizeNotes(loadJSON(KEY_NOTES, {}));
 let settings = Object.assign(defaultSettings(), loadJSON(KEY_SETTINGS, {}));
 
 /* ============================================================
@@ -691,6 +1013,9 @@ let answered = false;
 let sessionTotal = 0;   /* 本轮已作答题数 */
 let sessionCorrect = 0; /* 本轮答对题数 */
 let backMode = false;   /* 背题模式：直接显示答案与解析，不判题 */
+/* 从答题卡矩阵跳题进入的这一轮：不改动顺序练习的续做游标（appData.currentIndex），
+   否则"点开第 5 题看一眼"会把续做位置从第 200 题拉回第 6 题 */
+let matrixJump = false;
 
 /* ============================================================
    四、工具区
@@ -817,32 +1142,92 @@ function toggleBackMode() {
 }
 
 /* ============================================================
+   四之三、我的笔记（E4）
+   - 每题一段文字，存在独立的 drug_quiz_notes 键里
+   - 输入停止 700ms 或离开输入框时自动保存；切题前会先落盘一次
+   - 独立存放的原因：若把笔记塞进作答记录，「只写笔记没作答」会被算成已答题
+   ============================================================ */
+const noteState = { qid: null, timer: null, dirty: false };
+
+/** 把当前题已有的笔记回显到输入框 */
+function renderNote() {
+  const box = $("noteText");
+  if (!box) return;
+  const qid = order[cursor];
+  if (typeof qid !== "number") return;
+  box.value = notesData[qid] || "";
+  noteState.qid = qid;
+  noteState.dirty = false;
+  if (noteState.timer) { clearTimeout(noteState.timer); noteState.timer = null; }
+  if ($("noteStatus")) $("noteStatus").textContent = "";
+}
+
+/** 输入后防抖，避免每敲一个字就写一次 localStorage */
+function scheduleNoteSave() {
+  noteState.dirty = true;
+  if ($("noteStatus")) $("noteStatus").textContent = "正在输入…";
+  if (noteState.timer) clearTimeout(noteState.timer);
+  noteState.timer = setTimeout(flushNote, 700);
+}
+
+/** 真正落盘；切题前会先调用一次，保证没来得及防抖的内容也不丢 */
+function flushNote() {
+  if (noteState.timer) { clearTimeout(noteState.timer); noteState.timer = null; }
+  if (!noteState.dirty || noteState.qid === null) return;
+  const qid = noteState.qid;
+  const box = $("noteText");
+  const text = (box ? box.value : "").slice(0, 2000).trim();
+  if (text) notesData[qid] = text;
+  else delete notesData[qid];
+  saveJSON(KEY_NOTES, notesData);
+  noteState.dirty = false;
+  if ($("noteStatus")) {
+    $("noteStatus").textContent = text ? "笔记已保存（只存在本机）" : "笔记已清空";
+  }
+}
+
+function initNote() {
+  const box = $("noteText");
+  if (!box) return;
+  box.addEventListener("input", scheduleNoteSave);
+  box.addEventListener("blur", flushNote);
+}
+
+/* ============================================================
    五、菜单区
    ============================================================ */
-/** 已作答题目数（题库中至少答过一次的题目数量） */
-function countAnswered() {
-  return Object.keys(appData.records).length;
-}
-
-/** 最近一次作答的正确率文本 */
-function latestAccuracyText() {
-  let answeredCount = 0, correctCount = 0;
-  Object.keys(appData.records).forEach(function (key) {
-    answeredCount++;
-    if (appData.records[key].correct) correctCount++;
-  });
-  return formatPercent(correctCount, answeredCount);
-}
-
-/** 刷新主菜单上的进度与概览文字 */
+/** 刷新主菜单上的进度、概览文字与 6 张统计卡（统一走 computeStats() 一套口径） */
 function updateMenuProgress() {
+  const s = computeStats();
+  /* 进度一行：与服务端版首页同文案模板（S2=A）
+     续做位置提示（T1=A）：顺序练习会自动从上次位置继续，这里把它显示出来。
+     位置取 appData.currentIndex（静态版的续做游标，= 上一题的下标 + 1）。
+     未开始时不追加，避免出现「续做：第 1 题」这种噪声；读完一轮则显示已完成。 */
+  let progressText = "当前进度：已作答 " + s.answered + " 题 / 共 " + BANK_SIZE + " 题";
   if (appData.currentIndex >= BANK_SIZE) {
-    $("menuProgress").textContent = "顺序练习：已完成全部 " + BANK_SIZE + " 题（可以重新练一轮）";
-  } else {
-    $("menuProgress").textContent = "当前进度：第 " + (appData.currentIndex + 1) + " 题 / 共 " + BANK_SIZE + " 题";
+    progressText += " · 已完成一轮";
+  } else if (appData.currentIndex > 0) {
+    progressText += " · 续做：第 " + (appData.currentIndex + 1) + " 题";
   }
-  $("menuSummary").textContent = "已答 " + countAnswered() + " 题 · 错题 " + wrongData.wrongIndices.length +
-    " 题 · 最近一次正确率 " + latestAccuracyText();
+  $("menuProgress").textContent = progressText;
+  /* 概览一行：与服务端版首页同口径、同文案模板（S2=A） */
+  $("menuSummary").textContent = "错题 " + s.wrong + " 题 · 最近一次正确率 " + formatPercent(s.correct, s.answered) +
+    " · 累计作答 " + s.attempts + " 次";
+
+  /* 6 张统计卡：与服务端版首页同结构、同 id */
+  const cards = {
+    statTotal: String(BANK_SIZE),
+    statAnswered: String(s.answered),
+    statAccuracy: formatPercent(s.correct, s.answered),
+    statWrong: String(s.wrong),
+    statAttempts: String(s.attempts),
+    statUnanswered: String(BANK_SIZE - s.answered)
+  };
+  Object.keys(cards).forEach(function (id) {
+    const el = $(id);
+    if (el) el.textContent = cards[id];
+  });
+
   /* 题数动态显示，避免题库变化后文案写死出错 */
   $("btnFull").textContent = "顺序做全部 " + BANK_SIZE + " 题";
 }
@@ -851,6 +1236,7 @@ function updateMenuProgress() {
 function backToMenu() {
   hide("quiz"); hide("stats"); hide("wrongBook");
   show("menu");
+  setActiveTab("menu");
   updateMenuProgress();
   window.scrollTo(0, 0);
 }
@@ -868,6 +1254,7 @@ function rememberMode(newMode) {
 /** 顺序练习：从上次进度继续 */
 function startFullQuiz() {
   rememberMode("full");
+  matrixJump = false;
   order = rangeArray(BANK_SIZE);
   sessionTotal = 0; sessionCorrect = 0;
   if (appData.currentIndex >= BANK_SIZE) {
@@ -881,6 +1268,7 @@ function startFullQuiz() {
 /** 随机练习：打乱顺序，从第 1 题开始（不影响顺序练习的进度） */
 function startRandomQuiz() {
   rememberMode("random");
+  matrixJump = false;
   order = shuffleArray(rangeArray(BANK_SIZE));
   cursor = 0;
   sessionTotal = 0; sessionCorrect = 0;
@@ -895,6 +1283,7 @@ function startWrongQuiz() {
     return;
   }
   rememberMode("wrong");
+  matrixJump = false;
   order = ids;
   cursor = 0;
   sessionTotal = 0; sessionCorrect = 0;
@@ -905,11 +1294,25 @@ function startWrongQuiz() {
 function enterQuiz() {
   hide("menu"); hide("stats"); hide("wrongBook");
   show("quiz");
+  setActiveTab("quiz");
   renderQuestion();
+}
+
+/** 从答题卡矩阵跳到某题（qid 为 0 起的题库下标）：
+ *  走顺序练习的题目顺序，但**不影响**顺序练习的续做游标（见 matrixJump 说明） */
+function openQuestionAt(qid) {
+  rememberMode("full");
+  matrixJump = true;
+  order = rangeArray(BANK_SIZE);
+  cursor = Math.min(Math.max(qid, 0), BANK_SIZE - 1);
+  sessionTotal = 0;
+  sessionCorrect = 0;
+  enterQuiz();
 }
 
 /** 渲染当前题目 */
 function renderQuestion() {
+  flushNote();                 /* 切题前先把上一题的笔记落盘（E4） */
   const qid = order[cursor];
   const q = QUESTION_BANK[qid];
   selected = [];
@@ -942,6 +1345,7 @@ function renderQuestion() {
     revealAnswer(q);
   }
 
+  renderNote();                /* 回显本题已有的笔记（E4） */
   window.scrollTo(0, 0);
 }
 
@@ -1062,7 +1466,7 @@ function recordAnswer(qid, chosen, correct) {
     timestamp: Date.now()
   };
   if (!correct) addWrong(qid);
-  if (mode === "full") appData.currentIndex = cursor + 1;
+  if (mode === "full" && !matrixJump) appData.currentIndex = cursor + 1;
   saveJSON(KEY_DATA, appData);
 }
 
@@ -1073,7 +1477,7 @@ function nextQuestion() {
     return;
   }
   cursor++;
-  if (mode === "full") {
+  if (mode === "full" && !matrixJump) {
     appData.currentIndex = cursor;
     saveJSON(KEY_DATA, appData);
   }
@@ -1082,7 +1486,7 @@ function nextQuestion() {
 
 /** 本轮完成：显示小结，并把按钮改成"返回菜单" */
 function finishSession() {
-  if (mode === "full") {
+  if (mode === "full" && !matrixJump) {
     appData.currentIndex = BANK_SIZE;
     saveJSON(KEY_DATA, appData);
   }
@@ -1127,6 +1531,7 @@ function removeWrong(qid) {
 function showWrongBook() {
   hide("menu"); hide("quiz"); hide("stats");
   show("wrongBook");
+  setActiveTab("wrongBook");
   renderWrongList();
   window.scrollTo(0, 0);
 }
@@ -1225,6 +1630,7 @@ function createStatItem(label, value) {
 function showStats() {
   hide("menu"); hide("quiz"); hide("wrongBook");
   show("stats");
+  setActiveTab("stats");
 
   const s = computeStats();
   const box = $("statsContent");
@@ -1262,11 +1668,373 @@ function showStats() {
   hint.textContent = "正确率按每题最近一次作答计算；错题重练答对后，正确率会随之提高。";
   box.appendChild(hint);
 
+  /* 答题卡矩阵（M1=A：嵌在统计视图下方，不新增页面） */
+  const matrixTitle = document.createElement("div");
+  matrixTitle.className = "stat-section";
+  matrixTitle.textContent = "答题卡矩阵（点击题号跳到该题）";
+  box.appendChild(matrixTitle);
+
+  const legend = document.createElement("div");
+  legend.className = "matrix-legend";
+  [["", "未答"], ["dot-correct", "答对"], ["dot-wrong", "答错"], ["dot-collected", "★ 已收藏"]]
+    .forEach(function (pair) {
+      const item = document.createElement("span");
+      item.className = "legend-item";
+      const dot = document.createElement("i");
+      dot.className = "legend-dot" + (pair[0] ? " " + pair[0] : "");
+      item.appendChild(dot);
+      item.appendChild(document.createTextNode(pair[1]));
+      legend.appendChild(item);
+    });
+  box.appendChild(legend);
+
+  const matrix = document.createElement("div");
+  matrix.className = "answer-matrix";
+  matrix.id = "answerMatrix";
+  matrix.setAttribute("aria-label", "题号矩阵");
+  box.appendChild(matrix);
+
+  const matrixHint = document.createElement("div");
+  matrixHint.className = "hint";
+  matrixHint.id = "matrixHint";
+  matrixHint.textContent = "正在渲染题号矩阵…";
+  box.appendChild(matrixHint);
+
+  renderMatrix();
   window.scrollTo(0, 0);
 }
 
 /* ============================================================
-   九、清空记录
+   八之二、答题卡题号矩阵（M1=A 嵌入统计视图 / M2=A 5 列）
+   - 数据源就是本地的 appData.records 与 wrongData（渲染时实时读取，不缓存）
+   - 分块渲染：每批 100 格，300 格不会卡住首屏
+   ============================================================ */
+const MATRIX_BATCH = 100;
+
+/** 单题状态：与「错题本」口径一致——进过错题本就显示红色 */
+function matrixStatusOf(qid) {
+  if (wrongData.wrongIndices.indexOf(qid) >= 0) return "wrong";
+  const rec = appData.records[qid];
+  if (!rec) return "new";
+  return rec.correct ? "correct" : "wrong";
+}
+
+/** 渲染题号矩阵；点击格子跳到对应题目 */
+function renderMatrix() {
+  const box = $("answerMatrix");
+  if (!box) return;
+  const hint = $("matrixHint");
+  box.textContent = "";
+
+  let cursor = 0, answered = 0, correct = 0, wrong = 0, collected = 0;
+
+  function renderBatch() {
+    const frag = document.createDocumentFragment();
+    const end = Math.min(cursor + MATRIX_BATCH, BANK_SIZE);
+    for (; cursor < end; cursor++) {
+      const qid = cursor;                     /* 0 起的题库下标 */
+      const rec = appData.records[qid];
+      const status = matrixStatusOf(qid);
+      if (rec) answered++;
+      if (status === "correct") correct++;
+      if (status === "wrong") wrong++;
+      if (rec && rec.collected) collected++;
+
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "matrix-cell" + (status === "new" ? "" : " " + status);
+      cell.dataset.qid = String(qid);
+      cell.dataset.status = status;
+      cell.textContent = String(qid + 1);
+      cell.title = "题库第 " + (qid + 1) + " 题（"
+        + (status === "correct" ? "已答对" : status === "wrong" ? "做错过" : "未作答") + "）";
+      if (rec && rec.collected) {
+        const star = document.createElement("span");
+        star.className = "matrix-star";
+        star.textContent = "★";              /* 收藏只加角标，不改格子底色 */
+        cell.appendChild(star);
+      }
+      cell.addEventListener("click", function () { openQuestionAt(qid); });
+      frag.appendChild(cell);
+    }
+    box.appendChild(frag);
+
+    if (cursor < BANK_SIZE) {
+      window.requestAnimationFrame(renderBatch);
+    } else if (hint) {
+      hint.textContent = "共 " + BANK_SIZE + " 题 · 已答 " + answered + " · 答对 " + correct
+        + " · 答错 " + wrong + (collected ? " · 收藏 " + collected : "")
+        + "；点击题号跳到该题。";
+    }
+  }
+  renderBatch();
+}
+
+/* ============================================================
+   九、底部导航（设计稿 4 tab：首页 / 练习 / 错题本 / 统计）
+   ============================================================ */
+/** 高亮当前所在的 tab */
+function setActiveTab(view) {
+  document.querySelectorAll(".tabbar .tab").forEach(function (a) {
+    if (a.dataset.view === view) { a.classList.add("active"); }
+    else { a.classList.remove("active"); }
+  });
+}
+
+/** 点击 tab 切换页面 */
+function onTabClick(event) {
+  event.preventDefault();
+  const view = this.dataset.view;
+  if (view === "menu") { backToMenu(); }
+  else if (view === "quiz") { startFullQuiz(); }
+  else if (view === "wrongBook") { showWrongBook(); }
+  else if (view === "stats") { showStats(); }
+}
+
+/* ============================================================
+   九之二、进度导出 / 导入（E2：备份、换设备、跨版本迁移）
+   导出文件与「服务端版 / 安卓版」通用：progress 以「1 起的题号」做键、字段名统一。
+   导入策略由用户当场选：确定 = 覆盖，取消 = 与当前进度合并。
+   ============================================================ */
+const PROGRESS_FILE_VERSION = 1;
+
+/** 导出文件名：drugquiz-progress-YYYYMMDD.json */
+function progressFileName() {
+  const d = new Date();
+  const p = function (n) { return String(n).padStart(2, "0"); };
+  return "drugquiz-progress-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + ".json";
+}
+
+/** 触发浏览器下载一个 JSON 文件 */
+function downloadJson(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+/** 本地进度 → 通用格式（1 起的题号） */
+function staticProgressToCommon() {
+  const out = {};
+  Object.keys(appData.records).forEach(function (key) {
+    const idx = Number(key);
+    if (!isFinite(idx) || idx < 0 || idx >= BANK_SIZE) return;
+    const rec = appData.records[key] || {};
+    out[String(idx + 1)] = {
+      answered: true,
+      correct: rec.correct === true,
+      selected: Array.isArray(rec.selected) ? rec.selected.slice() : [],
+      attempts: Math.max(1, Math.floor(Number(rec.attempts) || 1)),
+      wrong_count: Math.max(0, Math.floor(Number(wrongData.wrongCount[String(idx)]) || 0)),
+      collected: rec.collected === true,
+      note: typeof notesData[idx] === "string" ? notesData[idx] : ""
+    };
+  });
+  /* 只进了错题本、却没有作答记录的题也一并带出去 */
+  wrongData.wrongIndices.forEach(function (idx) {
+    const key = String(idx + 1);
+    if (out[key]) return;
+    const n = Math.max(1, Math.floor(Number(wrongData.wrongCount[String(idx)]) || 1));
+    out[key] = { answered: true, correct: false, selected: [], attempts: n,
+                 wrong_count: n, collected: false,
+                 note: typeof notesData[idx] === "string" ? notesData[idx] : "" };
+  });
+  /* 只写了笔记、没有作答记录的题也要带出去（E4） */
+  Object.keys(notesData).forEach(function (key) {
+    const idx = Number(key);
+    const text = notesData[key];
+    if (!isFinite(idx) || idx < 0 || idx >= BANK_SIZE || !text) return;
+    const k = String(idx + 1);
+    if (out[k]) { out[k].note = text; return; }
+    out[k] = { answered: false, correct: false, selected: [], attempts: 0,
+               wrong_count: 0, collected: false, note: text };
+  });
+  return out;
+}
+
+/** 通用格式 → 本地进度（records / wrongIndices / wrongCount） */
+function commonToStaticProgress(items) {
+  const records = {}, wrongIndices = [], wrongCount = {};
+  const notes = {};
+  Object.keys(items).forEach(function (key) {
+    const qid = Number(key);
+    const rec = items[key];
+    if (!isFinite(qid) || qid < 1 || qid > BANK_SIZE || !rec || typeof rec !== "object") return;
+    const idx = qid - 1;
+    const attempts = Math.max(0, Math.floor(Number(rec.attempts) || 0));
+    /* 只有真的作答过才建作答记录；只写笔记 / 只收藏的不建，避免污染已答题数 */
+    if (rec.answered || attempts > 0) {
+      records[idx] = {
+        selected: Array.isArray(rec.selected)
+          ? rec.selected.filter(function (x) { return typeof x === "string"; }) : [],
+        correct: rec.correct === true,
+        attempts: Math.max(1, attempts),
+        timestamp: 0
+      };
+      if (rec.collected) records[idx].collected = true;
+    }
+    if (typeof rec.note === "string" && rec.note.trim()) notes[idx] = rec.note.trim().slice(0, 2000);
+    const wc = Math.max(0, Math.floor(Number(rec.wrong_count) || 0));
+    if (wc > 0) { wrongIndices.push(idx); wrongCount[String(idx)] = wc; }
+  });
+  wrongIndices.sort(function (a, b) { return a - b; });
+  return { records: records, wrongIndices: wrongIndices, wrongCount: wrongCount, notes: notes };
+}
+
+/** 只保留结构合法的记录，避免坏文件把本地进度搞脏 */
+function sanitizeCommonProgress(raw) {
+  const out = {};
+  if (!raw || typeof raw !== "object") return out;
+  Object.keys(raw).forEach(function (key) {
+    const qid = Number(key);
+    const rec = raw[key];
+    if (!isFinite(qid) || qid < 1 || qid > BANK_SIZE || !rec || typeof rec !== "object") return;
+    out[String(qid)] = {
+      answered: !!rec.answered,
+      correct: rec.correct === true,
+      selected: Array.isArray(rec.selected)
+        ? rec.selected.filter(function (x) { return typeof x === "string"; }) : [],
+      attempts: Math.max(0, Math.floor(Number(rec.attempts) || 0)),
+      wrong_count: Math.max(0, Math.floor(Number(rec.wrong_count) || 0)),
+      collected: !!rec.collected,
+      note: typeof rec.note === "string" ? rec.note : ""
+    };
+  });
+  return out;
+}
+
+/** 合并两份进度：每题保留作答次数更多的一条；错题次数与收藏取并集 */
+function mergeCommonProgress(current, incoming) {
+  const out = {};
+  Object.keys(current).forEach(function (k) { out[k] = current[k]; });
+  Object.keys(incoming).forEach(function (k) {
+    const a = out[k], b = incoming[k];
+    if (!a) { out[k] = b; return; }
+    const newer = (b.attempts || 0) > (a.attempts || 0) ? b : a;
+    out[k] = {
+      answered: !!(a.answered || b.answered),
+      correct: !!newer.correct,
+      selected: newer.selected || [],
+      attempts: Math.max(a.attempts || 0, b.attempts || 0),
+      wrong_count: Math.max(a.wrong_count || 0, b.wrong_count || 0),
+      collected: !!(a.collected || b.collected),
+      note: a.note || b.note || ""
+    };
+  });
+  return out;
+}
+
+/** 导出进度 + 设置，返回导出内容（便于调用方提示条数） */
+function exportProgress() {
+  const payload = {
+    version: PROGRESS_FILE_VERSION,
+    app: "DrugQuiz-SC2",
+    source: "static",
+    exportedAt: new Date().toISOString(),
+    progress: staticProgressToCommon(),
+    settings: { mode: (mode === "full" ? "seq" : mode), back_mode: backMode },
+    extras: { seqCursor: appData.currentIndex }    /* 静态版特有的续做游标，其它版本忽略 */
+  };
+  downloadJson(payload, progressFileName());
+  return payload;
+}
+
+/** 导入进度：确定 = 覆盖，取消 = 合并 */
+function importProgress(text) {
+  const data = JSON.parse(text);
+  if (!data || typeof data !== "object" || !data.progress) {
+    throw new Error("文件格式不正确：缺少 progress 字段");
+  }
+  const incoming = sanitizeCommonProgress(data.progress);
+  const count = Object.keys(incoming).length;
+  if (!count) throw new Error("文件里没有可导入的作答记录");
+
+  const overwrite = window.confirm(
+    "导入进度（共 " + count + " 题）：\n\n" +
+    "点「确定」= 用文件里的进度覆盖当前进度\n" +
+    "点「取消」= 与当前进度合并（每题保留作答次数更多的记录）"
+  );
+
+  const merged = overwrite ? incoming
+    : mergeCommonProgress(sanitizeCommonProgress(staticProgressToCommon()), incoming);
+  const parsed = commonToStaticProgress(merged);
+
+  appData.records = parsed.records;
+  wrongData.wrongIndices = parsed.wrongIndices;
+  wrongData.wrongCount = parsed.wrongCount;
+  notesData = parsed.notes;
+  /* 续做游标：文件里有就恢复，覆盖导入但没有就归零 */
+  if (data.extras && typeof data.extras.seqCursor === "number") {
+    appData.currentIndex = Math.min(Math.max(Math.floor(data.extras.seqCursor), 0), BANK_SIZE);
+  } else if (overwrite) {
+    appData.currentIndex = 0;
+  }
+  /* 设置：只应用本版认识的字段（mode 做 seq ↔ full 映射） */
+  if (data.settings && typeof data.settings === "object") {
+    const m = data.settings.mode;
+    if (m === "seq" || m === "full") settings.mode = "full";
+    else if (m === "random" || m === "wrong") settings.mode = m;
+    if (typeof data.settings.back_mode === "boolean") settings.backMode = data.settings.back_mode;
+    else if (typeof data.settings.backMode === "boolean") settings.backMode = data.settings.backMode;
+    backMode = settings.backMode === true;
+    updateBackModeUI();
+  }
+  saveJSON(KEY_DATA, appData);
+  saveJSON(KEY_WRONG, wrongData);
+  saveJSON(KEY_NOTES, notesData);
+  saveJSON(KEY_SETTINGS, settings);
+  updateMenuProgress();
+  if (!$("quiz").classList.contains("hidden")) renderNote();
+  return { written: Object.keys(parsed.records).length, mode: overwrite ? "覆盖" : "合并" };
+}
+
+/** 点「导出进度」 */
+function exportProgressClick() {
+  const out = $("progressIOStatus");
+  try {
+    const payload = exportProgress();
+    if (out) out.textContent = "已导出 " + Object.keys(payload.progress).length + " 条作答记录（含设置）。";
+    showToast("进度已导出");
+  } catch (err) {
+    if (out) out.textContent = "导出失败：" + err.message;
+    showToast(err.message);
+  }
+}
+
+/** 点「导入进度」→ 打开文件选择器 */
+function importProgressClick() {
+  const input = $("importProgressFile");
+  if (input) input.click();
+}
+
+/** 绑定文件选择事件 */
+function initProgressIO() {
+  const input = $("importProgressFile");
+  if (!input) return;
+  input.addEventListener("change", function () {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const out = $("progressIOStatus");
+    file.text().then(function (text) {
+      const res = importProgress(text);
+      if (out) out.textContent = "已" + res.mode + "导入 " + res.written + " 条作答记录。";
+      showToast("进度已导入（" + res.mode + "）");
+    }).catch(function (err) {
+      if (out) out.textContent = "导入失败：" + err.message;
+      showToast(err.message);
+    }).then(function () {
+      input.value = "";              /* 允许重复选择同一个文件 */
+    });
+  });
+}
+
+/* ============================================================
+   九之三、清空记录
    ============================================================ */
 function resetAll() {
   const ok = window.confirm("确定清空所有记录吗？\n\n将清除：顺序练习进度、错题本、统计记录。\n此操作无法撤销。");
@@ -1275,9 +2043,11 @@ function resetAll() {
   removeRaw(KEY_DATA);
   removeRaw(KEY_WRONG);
   removeRaw(KEY_SETTINGS);
+  removeRaw(KEY_NOTES);
 
   appData = defaultData();
   wrongData = defaultWrong();
+  notesData = {};
   settings = defaultSettings();
   order = [];
   cursor = 0;
@@ -1300,6 +2070,12 @@ function init() {
     $("menuProgress").textContent = "题库数据异常（0 题），请重新生成 index.html";
     return;
   }
+  /* 底部导航：4 个 tab 的点击切换 */
+  document.querySelectorAll(".tabbar .tab").forEach(function (a) {
+    a.addEventListener("click", onTabClick);
+  });
+  initNote();
+  initProgressIO();
   backMode = settings.backMode === true;
   updateBackModeUI();
   updateMenuProgress();
